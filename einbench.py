@@ -17,11 +17,24 @@ def random_pairwise_contraction(
     num_indices=None,
 ):
     """Generate a random pairwise einsum contraction with an approximate
-    target computational cost.
+    target computational cost. The process is as follows:
+
+    1. Choose the number of distinct indices to use in the contraction
+       (between 1 and log2(cost)). The distribution is controlled by
+       `num_indices_center` and `num_indices_concentration` which define
+       a beta distribution over the range.
+    2. Randomly distribute the total cost among the indices, to define
+       their sizes.
+    3. Adjust the sizes downwards until the actual cost is <= target cost.
+    4. Randomly assign each index to one of several types, which define
+       whether they appear on the left, right, and/or output.
+    5. Adjust to disallow scalars or pure outer products if required.
+    6. Randomly permute the indices on each term.
+    7. Return the einsum input and output strings, and the index size dict.
 
     Parameters
     ----------
-    cost : float|int
+    cost : float or int
         Target computational cost (in scalar operations) for the contraction.
     seed : int, optional
         Random seed for reproducibility, supplied to numpy RandomState.
@@ -87,15 +100,18 @@ def random_pairwise_contraction(
     # for consistency across versions/platforms
 
     if seed is not None:
-        seed = np.array([
-            seed,
-            cost,
-            allow_scalar,
-            allow_outer,
-            allow_batch,
-            allow_sum,
-            allow_trace,
-        ], dtype="int32")
+        seed = np.array(
+            [
+                seed,
+                cost,
+                allow_scalar,
+                allow_outer,
+                allow_batch,
+                allow_sum,
+                allow_trace,
+            ],
+            dtype="int32",
+        )
 
     rng = np.random.RandomState(seed)
 
@@ -339,9 +355,7 @@ def bench(
             # test we are in the correct *old* version of numpy
             from numpy._core.einsumfunc import _parse_eq_to_batch_matmul  # noqa
 
-            raise ValueError(
-                "This version of numpy already has bmm optimization."
-            )
+            raise ValueError("This version of numpy already has bmm optimization.")
         except ImportError:
             pass
 
