@@ -16,6 +16,24 @@ Both are generated with the same code, which is included in this repository
 as `einbench.py`. The main function is:
 
 ```python
+def random_pairwise_contraction(
+    cost,
+    seed=None,
+    p_lkept=1.0,
+    p_rkept=1.0,
+    p_con=1.0,
+    allow_scalar=True,
+    allow_outer=True,
+    allow_batch=True,
+    p_batch=0.25,
+    allow_sum=False,
+    p_sum=0.25,
+    allow_trace=False,
+    p_trace=0.05,
+    num_indices_center=4,
+    num_indices_concentration=1.5,
+    num_indices=None,
+):
     """Generate a random pairwise einsum contraction with an approximate
     target computational cost. The process is as follows:
 
